@@ -1,0 +1,47 @@
+# Example deployment that creates two pods, each consuming one Solarflare NIC (pods are scheduled across different nodes (best effort)).
+# These pods run and sleep forever.  You're meant to exec or rsh into them to run commands manually, for demonstreation purposes.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: onload-deployment
+  namespace: solarflare
+spec:
+  serviceAccount: sfc-deviceplugin
+  serviceAccountName: sfc-deviceplugin
+  hostNetwork: true
+  selector:
+    matchLabels:
+      app: onload
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: onload
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - onload
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: onload-pod
+        # TODO: permanent home for this image
+        image: quay.io/jeremyeder/onload
+        
+# TODO: merge a hook that alleviates the need for privileges
+        securityContext:
+          privileged: true
+
+# Note that openonload does not accelerate icmp, so use a tool like sfnt-pingpongi/iperf/netperf.
+        command: ["sleep"]
+        args: ["infinity"]
+
+        resources:
+          limits:
+            solarflare.com/sfc: 1
