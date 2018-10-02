@@ -235,7 +235,7 @@ func main()  {
 	found := sfc.discoverSolarflareResources()
 	if !found {
 		glog.Errorf("No SolarFlare NICs are present\n")
-		os.Exit(1)
+		//os.Exit(1)
 	}
 
 	if !sfc.isOnloadInstallHealthy() {
